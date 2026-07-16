@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>A&V STUDIO</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link rel="stylesheet" href="./index.css">
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- SEARCH OVERLAY -->
+<div class="sovl" id="sovl">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:44px">
+    <h3 style="font-size:16px;font-weight:700;color:var(--t1)">Search</h3>
+    <button class="ibtn" onclick="closeSearch()"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <div class="sbar">
+    <i class="fa-solid fa-magnifying-glass" style="color:var(--t3)"></i>
+    <input type="text" id="sinput" placeholder="Search titles, genres…">
+  </div>
+  <div class="sres" id="sres"></div>
+</div>
+
+<!-- JSON EDITOR MODAL -->
+<div class="modal-overlay" id="jsonModal">
+  <div class="modal-sheet">
+    <div class="modal-hdr">
+      <h3>📝 Edit Library JSON</h3>
+      <button class="ibtn" onclick="closeJsonModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:11px;color:var(--t3);margin-bottom:10px">Edit the JSON below. Changes update your library immediately. Make sure it is valid JSON.</p>
+      
+      <!-- ANILIST FAST INGESTION UTILITY -->
+      <div style="display:flex;gap:6px;margin-bottom:8px;background:var(--bg);padding:8px;border-radius:var(--rs);border:1px solid var(--bdr)">
+        <input type="text" id="aniListIdInput" placeholder="AniList ID or Title (Manga/Manhwa)" style="flex:1;background:var(--bg3);border:1px solid var(--bdr);border-radius:6px;padding:6px 10px;color:var(--t1);font-family:inherit;font-size:11.5px;outline:none">
+        <button onclick="handleAniListFetchClick()" style="background:var(--acc);color:#fff;padding:6px 12px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer">Fetch AniList</button>
+      </div>
+
+      <!-- MYANIMELIST (JIKAN) FAST INGESTION UTILITY -->
+      <div style="display:flex;gap:6px;margin-bottom:12px;background:var(--bg);padding:8px;border-radius:var(--rs);border:1px solid var(--bdr)">
+        <input type="text" id="malIdInput" placeholder="MAL ID or Title (Novels/Alternative)" style="flex:1;background:var(--bg3);border:1px solid var(--bdr);border-radius:6px;padding:6px 10px;color:var(--t1);font-family:inherit;font-size:11.5px;outline:none">
+        <button onclick="handleMalFetchClick()" style="background:#2563eb;color:#fff;padding:6px 12px;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer">Fetch MAL</button>
+      </div>
+
+      <textarea class="json-editor" id="jsonEditor" rows="12" spellcheck="false"></textarea>
+      <div id="jsonStatus" style="display:none" class="json-status"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeJsonModal()">Cancel</button>
+      <button class="btn-save" onclick="saveJsonEdit()"><i class="fa-solid fa-floppy-disk"></i> Save & Reload</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: HOME
+══════════════════════════════════════════════════════ -->
+<div class="page active" id="p-home">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="openAdmin()"><i class="fa-solid fa-bars"></i></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="logo-img" alt="">
+        <div class="brand"><h2>A&amp;V STUDIO</h2><span>DEVILAKV</span></div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <span class="pwa">PWA</span>
+      <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="av-avatar" alt="">
+    </div>
+  </header>
+  <div class="sa">
+    <div class="wrap">
+      <div class="sh"><h2>🔥 Featured</h2></div>
+      <div class="fstrip" id="fstrip"></div>
+      <div class="cat-strip" id="cstrip">
+        <button class="cpill on" data-cat="All" onclick="filterCat(this,'All')">All</button>
+        <button class="cpill" data-cat="Action" onclick="filterCat(this,'Action')">Action</button>
+        <button class="cpill" data-cat="Fantasy" onclick="filterCat(this,'Fantasy')">Fantasy</button>
+        <button class="cpill" data-cat="Novel" onclick="filterCat(this,'Novel')">Novel</button>
+        <button class="cpill" data-cat="Manhwa" onclick="filterCat(this,'Manhwa')">Manhwa</button>
+        <button class="cpill" data-cat="Manga" onclick="filterCat(this,'Manga')">Manga</button>
+        <button class="cpill" data-cat="Manhua" onclick="filterCat(this,'Manhua')">Manhua</button>
+      </div>
+      <div class="sh"><h2>Library</h2><span class="see-all" onclick="nav('list')">My List →</span></div>
+      <div class="bgrid" id="bgrid">
+        <div class="bcard"><div class="sk sk-cv"></div><div class="sk sk-ln"></div><div class="sk sk-sm"></div></div>
+        <div class="bcard"><div class="sk sk-cv"></div><div class="sk sk-ln"></div><div class="sk sk-sm"></div></div>
+        <div class="bcard"><div class="sk sk-cv"></div><div class="sk sk-ln"></div><div class="sk sk-sm"></div></div>
+        <div class="bcard"><div class="sk sk-cv"></div><div class="sk sk-ln"></div><div class="sk sk-sm"></div></div>
+      </div>
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni on" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: MY LIST
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-list">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="nav('home')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="logo-img" alt="">
+        <div class="brand"><h2>A&amp;V STUDIO</h2><span>MY LIST</span></div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <span class="pwa">PWA</span>
+      <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="av-avatar" alt="">
+    </div>
+  </header>
+  <div class="sa">
+    <div class="wrap">
+      <div class="fbar">
+        <input type="text" id="lsearch" placeholder="Search saved titles…" oninput="filterList()">
+        <select id="lcat" onchange="filterList()">
+          <option value="All">All Categories</option>
+          <option value="Action">Action</option>
+          <option value="Fantasy">Fantasy</option>
+          <option value="Novel">Novel</option>
+          <option value="Manhwa">Manhwa</option>
+        </select>
+        <select id="lsort" onchange="filterList()">
+          <option value="Default">Sort By</option>
+          <option value="A-Z">A – Z</option>
+          <option value="Z-A">Z – A</option>
+          <option value="Rating">Rating</option>
+        </select>
+      </div>
+      <div class="lhdr">
+        <span>Title</span><span>Progress</span><span>Rating</span><span>Status</span><span></span>
+      </div>
+      <div id="lbody"></div>
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni on" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: DETAILS
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-details">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" id="d-back"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="logo-img" alt="">
+        <div class="brand"><h2>A&amp;V STUDIO</h2><span>DETAILS</span></div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <span class="pwa">PWA</span>
+      <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="av-avatar" alt="">
+    </div>
+  </header>
+  <div class="sa">
+    <div class="wrap">
+      <section class="hero">
+        <div class="dcw">
+          <img id="d-cover" src="" alt="">
+          <button class="share-btn" id="d-share"><i class="fa-solid fa-share-nodes"></i></button>
+        </div>
+        <div class="hinf">
+          <h1 class="htitle" id="d-title"></h1>
+          <div class="mg" id="d-meta"></div>
+          <div class="rrow">
+            <i class="fa-solid fa-star" style="color:var(--yel);font-size:14px"></i>
+            <span class="rscore" id="d-score">–</span>
+            <span class="rcnt" id="d-rcnt"></span>
+          </div>
+          <div class="yrt" id="yrt-trigger">
+            <span id="yr-star"><i class="fa-regular fa-star"></i></span>
+            <span>Your rating: <strong id="yr-val" style="color:var(--acc2);display:none"></strong></span>
+          </div>
+          <div id="yr-wrap" style="display:none">
+            <select class="rdrop" id="yr-sel">
+              <option value="none">– Remove Rating –</option>
+              <option value="10">(10) Masterpiece</option>
+              <option value="9">(9) Great</option>
+              <option value="8">(8) Very Good</option>
+              <option value="7">(7) Good</option>
+              <option value="6">(6) Fine</option>
+              <option value="5">(5) Average</option>
+              <option value="4">(4) Bad</option>
+              <option value="3">(3) Very Bad</option>
+              <option value="2">(2) Horrible</option>
+              <option value="1">(1) Appalling</option>
+            </select>
+          </div>
+        </div>
+      </section>
+      <div class="cta">
+        <button class="btn-read" id="d-readbtn"><i class="fa-solid fa-play"></i> <span id="d-readtxt">Read Now</span></button>
+        <div class="sdrop-wrap">
+          <select class="sdrop" id="d-status">
+            <option>Reading</option>
+            <option>Plan to Read</option>
+            <option>Completed</option>
+            <option>On Hold</option>
+            <option>Dropped</option>
+          </select>
+        </div>
+        <button class="nbtn" id="d-notify"><i class="fa-solid fa-bell"></i></button>
+      </div>
+      <section class="sblk">
+        <h3>Synopsis</h3>
+        <p class="desc-text collapsed" id="d-desc"></p>
+        <span class="read-more-btn" id="desc-toggle" onclick="toggleDesc()">Read more</span>
+      </section>
+      <section class="sblk">
+        <h3>More Info</h3>
+        <div class="igrid" id="d-info"></div>
+      </section>
+      
+      <!-- CHAPTER SECTION (WITH COMICK + MANGADEX SYNC) -->
+      <section class="chap-section" id="chap-section">
+        <div class="chap-toolbar">
+          <h3 id="chap-count-lbl">Chapters</h3>
+          <button class="ctbtn" id="comick-sync-btn" onclick="syncChaptersFromComick()" style="background:#6366f1;color:#fff;border:none">
+            <i class="fa-solid fa-cloud-arrow-down"></i> Comick
+          </button>
+          <button class="ctbtn" id="mangadex-sync-btn" onclick="syncChaptersFromMangaDex()" style="background:#f97316;color:#fff;border:none">
+            <i class="fa-solid fa-cloud-arrow-down"></i> MangaDex
+          </button>
+          <div class="goto-wrap">
+            <input type="number" id="goto-input" placeholder="Ch.">
+            <button class="goto-btn" onclick="gotoChap()">Go</button>
+          </div>
+          <button class="ctbtn" id="sort-btn" onclick="toggleChapSort()">
+            <i class="fa-solid fa-arrow-down-short-wide"></i> <span id="sort-lbl">Desc</span>
+          </button>
+          <select class="grp-drop" id="grp-filter" onchange="renderChapters()">
+            <option value="All">All Groups</option>
+          </select>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden">
+          <div class="chap-list" id="chap-list"></div>
+        </div>
+        <div class="chap-pagination" id="chap-pages"></div>
+      </section>
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: CBZ/COMICK READER (vertical scroll like webtoon)
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-reader">
+  <div class="reader-layout">
+    <header class="reader-hdr">
+      <button class="ibtn" id="r-back"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="r-title">
+        <h1 id="r-title">Loading…</h1>
+        <span id="r-chap">Chapter –</span>
+      </div>
+      <label for="r-file" class="ibtn" style="cursor:pointer" title="Open local CBZ">
+        <i class="fa-solid fa-folder-open"></i>
+      </label>
+      <input type="file" id="r-file" class="hid" accept=".cbz,.zip">
+    </header>
+    <main class="reader-body" id="reader-body-scroll">
+      <div class="rloader" id="r-loader">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        <h3>Loading Chapter…</h3>
+        <p>Fetching archive from the server…</p>
+      </div>
+      <div class="img-stream" id="r-stream" style="display:none"></div>
+    </main>
+    <button class="scroll-top-btn" id="scroll-top-btn" onclick="scrollReaderToTop()" title="Back to top">
+      <i class="fa-solid fa-arrow-up"></i>
+    </button>
+    <footer class="reader-footer">
+      <button class="reader-nav-btn" id="r-prev" onclick="readerPrevChap()">
+        <i class="fa-solid fa-chevron-left"></i> Prev
+      </button>
+      <div class="reader-prog" id="r-prog">– / – Pages</div>
+      <button class="reader-nav-btn" id="r-next" onclick="readerNextChap()">
+        Next <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </footer>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: PDF READER
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-pdf">
+  <div class="pdf-layout">
+    <header class="pdf-hdr">
+      <button class="ibtn" id="pdf-back"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="pdf-title">
+        <h1 id="pdf-title">Document</h1>
+        <span id="pdf-chap">E-BOOK DOCUMENT PLAYER</span>
+      </div>
+      <a id="pdf-dl" class="pdf-dl-btn" download title="Download PDF">
+        <i class="fa-solid fa-download"></i>
+      </a>
+    </header>
+    <div class="pdf-viewer-wrap">
+      <iframe class="pdf-frame" id="pdf-frame" src="" allow="autoplay" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"></iframe>
+      <div class="pdf-no-preview hid" id="pdf-fallback">
+        <i class="fa-solid fa-file-pdf"></i>
+        <h3 id="pdf-fall-name">Document.pdf</h3>
+        <p>Your browser blocked the inline PDF preview.<br>Tap below to open it in a new tab.</p>
+        <button class="opn-big" id="pdf-open-tab">
+          <i class="fa-solid fa-external-link-alt"></i> Open PDF
+        </button>
+      </div>
+    </div>
+    <footer class="pdf-footer">
+      <button class="reader-nav-btn" id="pdf-prev" onclick="pdfPrevChap()">
+        <i class="fa-solid fa-chevron-left"></i> Prev
+      </button>
+      <div class="reader-prog" id="pdf-prog">Chapter –</div>
+      <button class="reader-nav-btn" id="pdf-next" onclick="pdfNextChap()">
+        Next <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </footer>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: CATEGORIES
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-categories">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="nav('home')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="brand"><h2 style="font-size:13px;font-weight:800;color:var(--t1)">CATEGORIES</h2></div>
+    </div>
+    <div class="hr"><button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button></div>
+  </header>
+  <div class="sa">
+    <div class="wrap">
+      <div class="cats-section-title" style="border-top:none;margin-top:6px">⚡ Popular Ongoing</div>
+      <div id="popularList" class="popular-list"></div>
+      <div class="cats-section-title">📚 Browse by Genre</div>
+      <div class="cats-grid" id="catsGrid"></div>
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni on" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: NOTIFICATIONS
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-notifications">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="nav('home')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="brand"><h2 style="font-size:13px;font-weight:800;color:var(--t1)">NOTIFICATIONS</h2></div>
+    </div>
+    <div class="hr"><button class="ibtn" onclick="markAllRead()" title="Mark all read"><i class="fa-solid fa-check-double"></i></button></div>
+  </header>
+  <div class="sa"><div class="wrap"><div id="notifList"></div></div></div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni on" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: PROFILE (comick-style user page — tap avatar top-right)
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-profile">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="nav('home')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="logo-img" alt="">
+        <div class="brand"><h2>Account</h2><span>PROFILE</span></div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <span class="pwa">PWA</span>
+      <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="av-avatar" alt="Profile" onclick="nav('profile')" style="cursor:pointer">
+    </div>
+  </header>
+  <div class="sa">
+    <div class="wrap">
+      <input type="file" id="avatarInput" class="hid" accept="image/*">
+      <input type="file" id="bannerInput" class="hid" accept="image/*">
+      <div class="prof-wrap">
+        <div class="prof-banner" id="profBanner">
+          <div class="prof-av-wrap">
+            <img id="profAv" class="prof-av-big" src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" alt="Profile photo">
+            <span class="prof-dot"></span>
+          </div>
+          <button class="prof-cam" onclick="document.getElementById('bannerInput').click()" title="Change banner image"><i class="fa-solid fa-camera"></i></button>
+        </div>
+        <div class="prof-edit-row"><button class="prof-edit-btn" onclick="openEditProfile()">Edit Profile</button></div>
+        <h1 class="prof-name" id="profName">DEVILAKV</h1>
+        <div class="prof-sub">
+          <span><b id="profKarma">0</b> comment karma</span>
+          <span><b id="profFollowers">0</b> followers</span>
+        </div>
+        <div class="prof-tabs">
+          <div class="prof-tab on"><i class="fa-solid fa-circle-info"></i> Summary</div>
+          <div class="prof-tab" onclick="nav('list')"><i class="fa-solid fa-list"></i> List <b id="profListCount">0</b></div>
+          <div class="prof-tab"><i class="fa-solid fa-user-plus"></i> Follows <b>0</b></div>
+          <div class="prof-tab"><i class="fa-solid fa-comment"></i> Reviews <b id="profReviews">0</b></div>
+        </div>
+        <h2 class="sum-title">Summary</h2>
+        <div class="sum-grid">
+          <div class="sum-col">
+            <div class="sum-bar" id="fmtBar"></div>
+            <div class="sum-rows" id="fmtRows"></div>
+          </div>
+          <div class="sum-col">
+            <div class="sum-bar" id="stBar"></div>
+            <div class="sum-rows" id="stRows"></div>
+          </div>
+        </div>
+        <div class="sum-totals" id="sumTotals"></div>
+        <p class="sum-tip">Tip: List total excludes Dropped and Plan to Read; marked total includes Reading, Completed, On-Hold, and Dropped.</p>
+        <div class="sum-totals" id="sumActivity"></div>
+      </div>
+
+      <!-- EDIT PROFILE OVERLAY -->
+      <div class="ep-overlay" id="epOverlay">
+        <div class="ep-head">
+          <div class="ep-head-row">
+            <button class="ibtn" onclick="closeEditProfile()" aria-label="Back"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2>Account</h2>
+          </div>
+          <div class="ep-tabs">
+            <div class="ep-tab on"><i class="fa-regular fa-address-card"></i> Profile</div>
+            <div class="ep-tab"><i class="fa-regular fa-user"></i> Account</div>
+            <div class="ep-tab"><i class="fa-regular fa-bell"></i> Notification</div>
+            <div class="ep-tab"><i class="fa-solid fa-language"></i> Title</div>
+          </div>
+        </div>
+        <div class="ep-body">
+          <h1 class="ep-title">Info</h1>
+          <p class="ep-desc">General information about your account.</p>
+          <div class="ep-field">
+            <label>ID</label>
+            <div class="ep-static" id="epId"></div>
+          </div>
+          <div class="ep-field">
+            <label>Supporter</label>
+            <div class="ep-static">0</div>
+          </div>
+          <div class="ep-field">
+            <label>Display name</label>
+            <input type="text" class="ep-input" id="epName" maxlength="30" placeholder="Your display name">
+          </div>
+          <div class="ep-field">
+            <label>Email address</label>
+            <div class="ep-static" id="epEmail">Not set ( Status: local account )</div>
+          </div>
+          <div class="ep-field">
+            <label>Avatar</label>
+            <p class="ep-note">Your photo is stored on this device.</p>
+            <p class="ep-warn">Uploading images that violate the guidelines will result in a permanent ban.</p>
+            <div class="ep-avatar-row">
+              <img class="ep-avatar-thumb" id="epAvThumb" src="/placeholder.svg" alt="Current avatar">
+              <button class="ep-btn" onclick="document.getElementById('avatarInput').click()">Edit Avatar</button>
+            </div>
+          </div>
+          <div class="ep-field">
+            <label>About me</label>
+            <textarea class="ep-textarea" id="epAbout" maxlength="500" placeholder="Tell us about yourself..."></textarea>
+          </div>
+          <button class="ep-save" onclick="saveEditProfile()">Save</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: SETTINGS
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-settings">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="openAdmin()"><i class="fa-solid fa-bars"></i></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="logo-img" alt="">
+        <div class="brand"><h2>Settings</h2><span>A&amp;V STUDIO</span></div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <span class="pwa">PWA</span>
+      <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="av-avatar" alt="Profile" onclick="nav('profile')" style="cursor:pointer">
+    </div>
+  </header>
+  <div class="sa">
+    <div class="wrap">
+      <input type="file" id="importInput" class="hid" accept=".json,application/json">
+
+      <div class="set-card" onclick="toast('Request a comic — contact DEVILAKV')" style="margin-top:6px">
+        <i class="fa-regular fa-square-plus lead"></i>
+        <div class="set-card-txt"><h4>Request new comic</h4></div>
+        <i class="fa-solid fa-arrow-up-right-from-square ext"></i>
+      </div>
+
+      <h2 class="set-h2">Profile</h2>
+      <div class="set-card" onclick="gotoEditProfile()">
+        <i class="fa-regular fa-user lead"></i>
+        <div class="set-card-txt"><h4>Edit Profile</h4></div>
+      </div>
+      <div class="set-card" onclick="nav('notifsettings')">
+        <i class="fa-regular fa-bell lead"></i>
+        <div class="set-card-txt"><h4>Notification and Settings</h4></div>
+      </div>
+
+      <h2 class="set-h2">Settings and privacy</h2>
+      <div class="set-card" onclick="toast('Language: English (more coming soon)')">
+        <i class="fa-solid fa-language lead"></i>
+        <div class="set-card-txt"><h4>Languages</h4></div>
+      </div>
+      <div class="set-card" onclick="toast('Title preference: English titles')">
+        <i class="fa-regular fa-rectangle-list lead"></i>
+        <div class="set-card-txt"><h4>Title preferences</h4></div>
+      </div>
+      <div class="set-card" onclick="nav('filter')">
+        <i class="fa-solid fa-sliders lead"></i>
+        <div class="set-card-txt"><h4>Filters</h4></div>
+      </div>
+      <div class="set-card" onclick="nav('import')">
+        <i class="fa-solid fa-download lead"></i>
+        <div class="set-card-txt"><h4>Import</h4><p>MAL/Anilist XML, CSV or JSON backup</p></div>
+      </div>
+      <div class="set-card" onclick="nav('export')">
+        <i class="fa-solid fa-upload lead"></i>
+        <div class="set-card-txt"><h4>Export</h4><p>CSV, MAL/Anilist or full JSON backup</p></div>
+      </div>
+      <div class="set-card" onclick="logoutData()">
+        <i class="fa-solid fa-arrow-right-from-bracket lead"></i>
+        <div class="set-card-txt"><h4>Logout</h4></div>
+      </div>
+
+      <h2 class="set-h2 adm-only" style="display:none">Admin</h2>
+      <div class="set-card adm-only" style="display:none" onclick="openAdmin()">
+        <i class="fa-solid fa-user-shield lead" style="color:var(--acc2)"></i>
+        <div class="set-card-txt"><h4>Admin Panel</h4><p>Library JSON, chapter links &amp; user management</p></div>
+      </div>
+
+
+      <h2 class="set-h2">Appearance</h2>
+      <div class="set-radio-card">
+        <div class="set-radio-head"><i class="fa-regular fa-moon"></i><h4>Dark mode</h4></div>
+        <div class="set-radio-opts" id="dmOpts">
+          <div class="rad-row" data-val="dark" onclick="setDarkMode('dark')"><span class="rad-circle"></span><span class="rad-lbl">Dark</span></div>
+          <div class="rad-row" data-val="light" onclick="setDarkMode('light')"><span class="rad-circle"></span><span class="rad-lbl">Light</span></div>
+          <div class="rad-row" data-val="system" onclick="setDarkMode('system')"><span class="rad-circle"></span><span class="rad-lbl">Sync with System</span></div>
+        </div>
+      </div>
+      <div class="set-radio-card">
+        <div class="set-radio-head"><i class="fa-solid fa-palette"></i><h4>Theme</h4></div>
+        <div class="set-radio-opts" id="thOpts">
+          <div class="rad-row" data-val="gray" onclick="setTheme('gray')"><span class="rad-circle"></span><span class="rad-lbl">Gray</span></div>
+          <div class="rad-row" data-val="black" onclick="setTheme('black')"><span class="rad-circle"></span><span class="rad-lbl">Black</span></div>
+        </div>
+      </div>
+
+      <h2 class="set-h2">Help and support</h2>
+      <div class="set-card" onclick="toast('Bug report — contact DEVILAKV')">
+        <i class="fa-solid fa-bug lead"></i>
+        <div class="set-card-txt"><h4>Bug Report</h4></div>
+        <i class="fa-solid fa-arrow-up-right-from-square ext"></i>
+      </div>
+      <div class="set-card" onclick="toast('Add this site to your home screen for the PWA app')">
+        <i class="fa-solid fa-mobile-screen lead"></i>
+        <div class="set-card-txt"><h4>PWA app</h4></div>
+      </div>
+      <div class="set-card" onclick="window.open('https://discord.com','_blank')">
+        <i class="fa-regular fa-comments lead"></i>
+        <div class="set-card-txt"><h4>Join Discord</h4></div>
+        <i class="fa-solid fa-arrow-up-right-from-square ext"></i>
+      </div>
+      <div class="set-card" onclick="window.open('https://reddit.com','_blank')">
+        <i class="fa-regular fa-comment lead"></i>
+        <div class="set-card-txt"><h4>Join Reddit</h4></div>
+        <i class="fa-solid fa-arrow-up-right-from-square ext"></i>
+      </div>
+      <div class="set-card" onclick="toast('A&V STUDIO v2.0 — reader for CBZ, PDF & novels')">
+        <i class="fa-regular fa-circle-question lead"></i>
+        <div class="set-card-txt"><h4>FAQ</h4></div>
+      </div>
+
+      <div class="set-card" onclick="clearData()" style="margin-top:18px;margin-bottom:24px">
+        <i class="fa-solid fa-trash lead" style="color:var(--red)"></i>
+        <div class="set-card-txt"><h4 style="color:var(--red)">Clear All Data</h4><p>Reset library, ratings &amp; favorites</p></div>
+      </div>
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni on" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: IMPORT
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-import">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="nav('settings')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="logo-img" alt="">
+        <div class="brand"><h2>A&amp;V STUDIO</h2><span>The Tracker</span></div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <span class="pwa">PWA</span>
+      <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="av-avatar" alt="Profile" onclick="nav('profile')" style="cursor:pointer">
+    </div>
+  </header>
+  <div class="sa">
+    <div class="wrap">
+      <input type="file" id="malXmlInput" class="hid" accept=".xml,text/xml">
+      <input type="file" id="backupCsvInput" class="hid" accept=".csv,.json,text/csv,application/json">
+
+      <div class="pg-eyebrow">Library Migration</div>
+      <h1 class="pg-title">Import your list from other sites</h1>
+      <p class="pg-desc">Connect an account or upload an exported file. Each source below keeps its current state visible without adding extra setup steps.</p>
+
+      <div class="pg-eyebrow">Providers</div>
+      <h1 class="pg-title" style="font-size:22px">Import from another site</h1>
+      <p class="pg-desc">File upload is available where the provider supports exported lists.</p>
+
+      <div class="prov-card">
+        <div class="prov-ico">MAL</div>
+        <h3>Files in MyAnimeList format</h3>
+        <p>Upload an exported file from MyAnimeList to import your library directly.</p>
+        <span class="pill-tag">Ready to import</span>
+        <div class="alt-box">
+          <span class="alt-tag">ALTERNATIVE</span><h5>Upload exported file</h5>
+          <p>Upload any exported list file that uses the MyAnimeList XML format, even if it came from another site.</p>
+          <div class="file-row" onclick="document.getElementById('malXmlInput').click()">
+            <span class="file-fake-btn">Choose File</span>
+            <span class="file-name" id="malXmlName">No file chosen</span>
+          </div>
+          <div class="file-hint">Choose the .xml file</div>
+          <button class="big-btn" onclick="importMalXml()">Import</button>
+        </div>
+      </div>
+
+      <div class="pg-eyebrow">Backup Restore</div>
+      <h1 class="pg-title" style="font-size:22px">Import a backup exported from A&amp;V STUDIO</h1>
+      <p class="pg-desc">Use this when you already exported your list from A&amp;V STUDIO and want to restore it quickly.</p>
+      <div class="prov-card grn">
+        <p style="font-size:14px;color:var(--t2);margin-bottom:10px;font-weight:500">CSV or JSON file</p>
+        <div class="file-row" onclick="document.getElementById('backupCsvInput').click()">
+          <span class="file-fake-btn">Choose File</span>
+          <span class="file-name" id="backupCsvName">No file chosen</span>
+        </div>
+        <div class="file-hint">Choose the .csv or .json file</div>
+        <button class="big-btn" onclick="importBackupFile()">Import</button>
+      </div>
+      <div style="height:24px"></div>
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni on" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: EXPORT
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-export">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="nav('settings')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="logo-img" alt="">
+        <div class="brand"><h2>A&amp;V STUDIO</h2><span>The Tracker</span></div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <span class="pwa">PWA</span>
+      <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="av-avatar" alt="Profile" onclick="nav('profile')" style="cursor:pointer">
+    </div>
+  </header>
+  <div class="sa">
+    <div class="wrap">
+      <h1 class="pg-title" style="font-size:32px;margin-top:14px">Export</h1>
+      <p class="pg-desc">Export your comics to CSV. You could use Excels or Numbers,... or any text editor to view it.</p>
+      <button class="big-btn" style="width:auto;padding:12px 18px" onclick="exportCsv()">Request to export your list.</button>
+      <p class="pg-desc" style="margin-top:14px">This list contains all the comics you have added to your list.</p>
+      <hr class="pg-hr">
+      <button class="big-btn" style="width:auto;padding:12px 18px" onclick="exportMalXml()">Request to export your list (MAL/Anilist compatiable).</button>
+      <p class="pg-desc" style="margin-top:14px">This list only have the comics that are available on MAL/Anilist.</p>
+      <hr class="pg-hr">
+      <button class="big-btn" style="width:auto;padding:12px 18px" onclick="exportData()">Request a full JSON backup.</button>
+      <p class="pg-desc" style="margin-top:14px">Full backup with your library, list, progress, ratings and profile. Restore it from the Import page.</p>
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni on" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: NOTIFICATION SETTINGS
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-notifsettings">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="nav('settings')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="logo-img" alt="">
+        <div class="brand"><h2>Account</h2><span>NOTIFICATIONS</span></div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <span class="pwa">PWA</span>
+      <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="av-avatar" alt="Profile" onclick="nav('profile')" style="cursor:pointer">
+    </div>
+  </header>
+  <div class="sa">
+    <div class="wrap">
+      <h1 class="pg-title" style="margin-top:14px">Notification Settings</h1>
+      <p class="pg-desc">Choose which events you want to receive and how you want to be notified.</p>
+      <p class="pg-desc" style="margin-bottom:6px"><i class="fa-brands fa-chrome" style="margin-right:10px;color:var(--t2)"></i>Web Push (Notification on browsers)</p>
+      <p class="pg-desc"><i class="fa-solid fa-mobile-screen" style="margin-right:12px;color:var(--acc)"></i>App Push (Notification for Apps) (in-development)</p>
+
+      <div class="tip-box">
+        <i class="fa-solid fa-circle-info"></i>
+        <div>
+          <h6>Tip:</h6>
+          <p>You can subscribe to specific comics by disabling notifications. Then, subscribe to them manually on each comic page.</p>
+        </div>
+      </div>
+
+      <div class="ntf-card">
+        <h4>Comment</h4>
+        <p>Display a notification when a user replies to your comment.</p>
+        <div class="ntf-opts">
+          <label class="ntf-chk chk-row" data-k="comment.web"><span class="chk-box"><i class="fa-solid fa-check"></i></span><span>Web Push</span></label>
+          <label class="ntf-chk chk-row" data-k="comment.app"><span class="chk-box"><i class="fa-solid fa-check"></i></span><span>App Push</span></label>
+        </div>
+      </div>
+
+      <div class="ntf-card">
+        <h4>New Chapter</h4>
+        <p>Receive notifications for all comics when they release a new chapter.</p>
+        <div class="ntf-opts">
+          <label class="ntf-chk chk-row" data-k="chapter.web"><span class="chk-box"><i class="fa-solid fa-check"></i></span><span>Web Push</span></label>
+          <label class="ntf-chk chk-row" data-k="chapter.app"><span class="chk-box"><i class="fa-solid fa-check"></i></span><span>App Push</span></label>
+        </div>
+      </div>
+
+      <div class="ntf-card">
+        <h4>New Features</h4>
+        <p>Notification for new features on A&amp;V STUDIO</p>
+        <div class="ntf-opts">
+          <label class="ntf-chk chk-row" data-k="features.web"><span class="chk-box"><i class="fa-solid fa-check"></i></span><span>Web Push</span></label>
+          <label class="ntf-chk chk-row" data-k="features.app"><span class="chk-box"><i class="fa-solid fa-check"></i></span><span>App Push</span></label>
+        </div>
+      </div>
+
+      <button class="save-btn" onclick="saveNotifSettings()">Save notification settings</button>
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni on" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: FILTER
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-filter">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="nav('settings')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="logo-img" alt="">
+        <div class="brand"><h2>A&amp;V STUDIO</h2><span>The Tracker</span></div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <span class="pwa">PWA</span>
+      <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="av-avatar" alt="Profile" onclick="nav('profile')" style="cursor:pointer">
+    </div>
+  </header>
+  <div class="sa">
+    <div class="wrap" id="filterWrap">
+      <h1 class="pg-title" style="font-size:30px;margin-top:14px">Preferences</h1>
+      <p class="pg-desc" style="margin-bottom:8px">Filter Comics in the updates section</p>
+      <hr class="pg-hr" style="margin:10px 0 6px">
+
+      <div class="chk-row" data-f="showMyList" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Display comics in my list</h5><p>Display comics that you followed in the &quot;Updates&quot; section.</p></div>
+      </div>
+      <div class="chk-row" data-f="showCountdown" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Display chapters with countdown timers in the updates section</h5><p>Chapters will appear when the countdown reaches 0.</p></div>
+      </div>
+
+      <h2 class="filter-h2">Manga/Manhwa/Manhua/Others</h2>
+      <div class="chk-row" data-f="typeManga" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Manga</h5><p>are comics originating from Japan</p></div>
+      </div>
+      <div class="chk-row" data-f="typeManhwa" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Manhwa</h5><p>are the general Korean term for comics and print cartoons. Outside Korea, the term usually refers to South Korean comics.</p></div>
+      </div>
+      <div class="chk-row" data-f="typeManhua" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Manhua</h5><p>is Chinese-language comics produced in China and Taiwan.</p></div>
+      </div>
+      <div class="chk-row" data-f="typeOthers" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Others</h5><p>are comics from other original languages, or comics whose country of origin is not set yet.</p></div>
+      </div>
+
+      <h2 class="filter-h2">Genders (Demographic)</h2>
+      <div class="chk-row" data-f="demoMale" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Male (Shounen + Seinen)</h5></div>
+      </div>
+      <div class="chk-row" data-f="demoFemale" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Female (Shoujo + Josei)</h5></div>
+      </div>
+      <div class="chk-row" data-f="demoNone" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>None (Not Set)</h5><p>Comics that have not been updated with information yet. It should be &quot;ON&quot; for those who don&apos;t want to miss any good comics.</p></div>
+      </div>
+
+      <h2 class="filter-h2">Mature Content</h2>
+      <div class="chk-row" data-f="mature" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Mature Content</h5><p>These comics may contain themes or imagery that are not suitable for all audiences, such as mild nudity, suggestive situations, or other mature topics. Viewer discretion is advised. Examples: romantic tension, partial nudity, adult themes, or non-explicit sexual references.</p></div>
+      </div>
+      <div class="chk-row" data-f="gore" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Frequent Horror and Gore</h5><p>Content that feature extreme horror or gore.</p></div>
+      </div>
+      <div class="chk-row" data-f="nudity" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Frequent Nudity or Sexual Content</h5><p>Tick this box if you are okay seeing comics that contain frequent or recurring nudity and sexual situations that are clearly depicted, though not pornographic. The content is intended for mature audiences (18+). By ticking this box you affirm that you are at least eighteen years old.</p></div>
+      </div>
+      <div class="chk-row" data-f="adult" onclick="togFilter(this)">
+        <span class="chk-box"><i class="fa-solid fa-check"></i></span>
+        <div class="chk-txt"><h5>Adult Only Sexual Content</h5><p>These comics feature explicit or graphic sexual material intended solely for adults (18+). This includes pornographic or near-pornographic content where the primary purpose is sexual arousal. Viewer discretion is strongly advised.</p></div>
+      </div>
+
+      <button class="save-btn" onclick="saveFilters()">Save preferences</button>
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni on" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: LOGIN / SIGN UP
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-login">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="nav('home')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="logo-img" alt="">
+        <div class="brand"><h2>Account</h2><span>LOGIN</span></div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <span class="pwa">PWA</span>
+      <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="av-avatar" alt="Profile">
+    </div>
+  </header>
+  <div class="sa">
+    <div class="wrap auth-wrap">
+      <h1 class="auth-title" id="authTitle">Login</h1>
+      <div class="auth-divider"></div>
+      <button class="auth-social" onclick="socialLogin('apple')"><i class="fa-brands fa-apple"></i> Sign in with apple</button>
+      <button class="auth-social" onclick="socialLogin('google')"><i class="fa-brands fa-google"></i> Sign in with google</button>
+      <div class="auth-divider" style="margin-top:24px"></div>
+      <div class="auth-field" id="authNameField" style="display:none">
+        <label>Display Name <span class="req">*</span></label>
+        <input type="text" id="authName" class="auth-input" maxlength="30" autocomplete="nickname">
+      </div>
+      <div class="auth-field">
+        <label>E-Mail <span class="req">*</span></label>
+        <input type="email" id="authEmail" class="auth-input" autocomplete="email">
+      </div>
+      <div class="auth-field">
+        <label>Password <span class="req">*</span></label>
+        <div class="auth-pass-wrap">
+          <input type="password" id="authPass" class="auth-input" autocomplete="current-password">
+          <button class="auth-eye" type="button" onclick="togglePassVis()" aria-label="Show password"><i class="fa-solid fa-eye-slash" id="authEyeIcon"></i></button>
+        </div>
+      </div>
+      <a class="auth-forgot" onclick="toast('Password reset is not available on this local site')">Forgot password?</a>
+      <button class="auth-submit" id="authSubmit" onclick="submitAuth()">Sign in with password</button>
+      <p class="auth-alt" id="authAltText">Don&apos;t have an account? <a onclick="toggleAuthMode()" id="authAltLink">Sign up</a></p>
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PAGE: ADMIN PANEL
+══════════════════════════════════════════════════════ -->
+<div class="page" id="p-admin">
+  <header class="app-header">
+    <div class="hl">
+      <button class="ibtn" onclick="nav('settings')"><i class="fa-solid fa-arrow-left"></i></button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="logo-img" alt="">
+        <div class="brand"><h2>Admin Panel</h2><span>A&amp;V STUDIO</span></div>
+      </div>
+    </div>
+    <div class="hr">
+      <button class="ibtn" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <span class="pwa">PWA</span>
+      <img src="https://raw.githubusercontent.com/Devilakv/Bgmi/refs/heads/main/70dabcedd7b19ab4bd947e66390201b1.jpg" class="av-avatar" alt="Profile">
+    </div>
+  </header>
+  <div class="sa">
+    <div class="wrap">
+      <h2 class="set-h2" style="margin-top:10px">Library</h2>
+      <div class="set-card" onclick="openJsonModal()">
+        <i class="fa-solid fa-file-code lead"></i>
+        <div class="set-card-txt"><h4>Edit Library JSON</h4><p>Add/update books &amp; chapters</p></div>
+      </div>
+      <div class="set-card" onclick="reloadLibrary()">
+        <i class="fa-solid fa-arrows-rotate lead"></i>
+        <div class="set-card-txt"><h4>Reload from GitHub</h4><p>Fetch latest library.json — auto updates</p></div>
+      </div>
+      <div class="set-card" id="reloadMetaBtn" onclick="reloadAllMetadata()">
+        <i class="fa-solid fa-database lead" style="color:var(--acc2)"></i>
+        <div class="set-card-txt"><h4>Reload Metadata</h4><p>Refresh all covers, descriptions &amp; info from API</p></div>
+        <span id="metaProgressBadge" style="display:none;background:rgba(56,189,248,.18);color:var(--acc2);font-size:9px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0"></span>
+      </div>
+
+      <h2 class="set-h2">Chapter API Sources</h2>
+      <div class="adm-panel" style="padding:9px 13px;margin-bottom:6px">
+        <p style="font-size:11px;color:var(--t3);margin-bottom:8px">Select a book below, then refresh its chapter list from Comick or MangaDex.</p>
+        <select id="admApiBookSel" class="adm-select" style="margin-bottom:10px"></select>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="ctbtn" onclick="adminRefreshComick()" style="background:#6366f1;color:#fff;border:none;flex:1;min-width:120px;justify-content:center">
+            <i class="fa-solid fa-rotate"></i> Refresh Comick
+          </button>
+          <button class="ctbtn" onclick="adminRefreshMangaDex()" style="background:#f97316;color:#fff;border:none;flex:1;min-width:120px;justify-content:center">
+            <i class="fa-solid fa-rotate"></i> Refresh MangaDex
+          </button>
+        </div>
+        <div id="admApiStatus" style="display:none;margin-top:8px;font-size:11px;padding:6px 10px;border-radius:6px;background:rgba(99,102,241,.1);color:var(--acc2)"></div>
+      </div>
+
+      <h2 class="set-h2">Chapter Links</h2>
+      <div class="adm-panel">
+        <select id="admBookSel" class="adm-select" onchange="admRenderChapters()"></select>
+        <div id="admChapList" class="adm-chap-list"></div>
+        <div class="adm-add-row">
+          <input type="number" id="admNewChap" placeholder="Ch #" class="adm-inp sm">
+          <input type="text" id="admNewUrl" placeholder="File URL (.cbz / .pdf)" class="adm-inp">
+          <select id="admNewType" class="adm-inp sm"><option>CBZ</option><option>PDF</option></select>
+          <button class="goto-btn" onclick="admAddChapter()">Add</button>
+        </div>
+        <button class="btn-save" style="width:100%;margin-top:10px" onclick="admSaveChapters()"><i class="fa-solid fa-floppy-disk"></i> Save Chapter Links</button>
+      </div>
+
+      <h2 class="set-h2">Users</h2>
+      <div class="adm-panel" style="padding:9px 13px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:11.5px;color:var(--t3)">Registered accounts — ban or promote to mod</span>
+        <button class="ctbtn" onclick="admLoadUsers()"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+      </div>
+      <div id="admUserList" style="margin-bottom:26px"></div>
+    </div>
+  </div>
+  <nav class="bnav">
+    <div class="ni" onclick="nav('home')"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="ni" onclick="nav('list')"><i class="fa-solid fa-book-open"></i><span>My List</span></div>
+    <div class="ni" onclick="nav('categories')"><i class="fa-solid fa-list-ul"></i><span>Categories</span></div>
+    <div class="ni" onclick="openSearch()"><i class="fa-solid fa-magnifying-glass"></i><span>Search</span></div>
+    <div class="ni" onclick="nav('notifications')"><i class="fa-solid fa-bell"></i><span>Alerts</span></div>
+    <div class="ni on" onclick="nav('settings')"><i class="fa-solid fa-gear"></i><span>Settings</span></div>
+  </nav>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════ -->
+<script src="./index.js" defer crossorigin="anonymous"></script>
+</body>
+</html>
